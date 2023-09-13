@@ -1,5 +1,24 @@
 #include "parse_lexeme.hpp"
 
+bool isLetter(char x) { return (x >= 'A' && x <= 'Z') || (x >= 'a' && x <= 'z'); }
+bool isNumber(char x) { return (x >= '0' && x <= '9'); }
+
+bool isSeparator(char _separator) {
+    const char separators[] = {'(', ')', '[', ']', ','};
+    for (auto separator: separators)
+        if (_separator == separator) 
+            return true;
+    return false;
+}
+
+bool isOperation(char _op) {
+    const char operations[] = {'+', '-', '*', '/'};
+    for (auto op: operations)
+        if (_op == op) return true;
+
+    return false;
+}
+
 void ltrim(std::string &s) {
     s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) {
         return !std::isspace(ch);
@@ -18,7 +37,7 @@ void trim(std::string &s) {
 }
 
 bool cmpPriority(char sym1, char sym2) {
-    std::unordered_map<char, int> priority_table={
+    std::unordered_map<char, int> priority_table = {
         {'(', 0},
         {'+', 1},
         {'-', 1},
@@ -40,9 +59,9 @@ bool isOperationForParse(char _op) {
 bool calculate(std::string &str) {
     int i = 0;
     for (; i < str.length();) {
-        // std::cout <<"[" << i << "]: " << str[i]  << std::endl;
         if (str[i] == (char)0)
             str.erase(i, 1);
+
         if (str[i] == '*' || str[i] == '/' || str[i] == '+' || str[i] == '-') {
             if (i - 2 >= 0 && (str[i - 2] == 'I' || str[i - 2] == 'N') && (str[i - 1] == 'I' || str[i - 1] == 'N')) {
                 str.erase(i - 1, 2);
@@ -52,14 +71,12 @@ bool calculate(std::string &str) {
         ++i;
     }
 
-    // for (int i = 0; i < str.length(); ++i)
-    //     std::cout <<"[" << i << "]: " << str[i]  << std::endl;
     if ((str[0] == 'I' || str[0] == 'N') && str.length() == 1)
         return true;
     return false;
 }
 
-std::string parse(const std::string &str, int start_pos, int end_pos) {
+std::string transformToPolishNotation(const std::string &str, int start_pos, int end_pos) {
     std::stack<char> operations;
     std::string polish_notation;
     bool flag_error = 0;
@@ -98,8 +115,5 @@ std::string parse(const std::string &str, int start_pos, int end_pos) {
             }
         }
     }
-    // for (int i = 0; i < polish_notation.size(); ++i)
-    //     std::cout << polish_notation[i];
-    // std::cout << std::endl;
     return polish_notation;
 }

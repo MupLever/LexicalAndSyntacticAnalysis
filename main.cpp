@@ -1,37 +1,14 @@
-#include <iostream>
-#include <stdio.h>
-#include <string.h>
-#include <stack>
 #include "parse_lexeme.hpp"
-using namespace std;
+#include <iostream>
 
-bool isLetter(char x){ return (x >= 'A' && x <= 'Z') || (x >= 'a' && x <= 'z'); }
-bool isNumber(char x){ return (x >= '0' && x <= '9'); }
-
-bool isSeparator(char _separator) {
-  const char separators[] = {'(', ')', '[', ']', ','};
-  for (auto separator: separators) {
-    if (_separator == separator) return true;
-  }
-  return false;
-}
-
-bool isOperation(char _op) {
-  const char operations[] = {'+', '-', '*', '/'};
-  for (auto op: operations)
-    if (_op == op) return true;
-
-  return false;
-}
-
-int numberOfSignal(char signal) {
+int numberOfSignal(const char signal) {
     const char signals[] = {'I', 'N', '[', ',', ']', ';'};
     for (int i = 0; i < 6; i++)
         if (signal == signals[i]) return i;
     return -1;
 }
 
-void printError(int arr[7][6], int state, char ch) {
+void printError(const int arr[7][6], const int state, const char ch) {
     for (int signal = 0; signal < 6; ++signal) {
         if (arr[state][signal] != 0) {
             switch (signal) {
@@ -56,15 +33,15 @@ void printError(int arr[7][6], int state, char ch) {
     }
 }
 
-void SyntacticAnalysis(std::string &str) {
+void syntacticAnalysis(std::string &str) {
     int automat[7][6] = {
         {1, 0, 0, 0, 0, 0},
-        {0,	0, 2, 0, 0, 7},
+        {0, 0, 2, 0, 0, 7},
         {3, 4, 0, 0, 0, 0},
-        {0,	0, 0, 5, 6, 0},
-        {0,	0, 0, 5, 6, 0},
-        {3,	4, 0, 0, 0, 0},
-        {0,	0, 0, 0, 0, 7}
+        {0, 0, 0, 5, 6, 0},
+        {0, 0, 0, 5, 6, 0},
+        {3, 4, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 7}
     };
 
     int state = 0, signal = -1, k = 0;
@@ -89,22 +66,13 @@ void SyntacticAnalysis(std::string &str) {
         }
 
         if (state == 2 || state == 5) {
-            // for (int i = 0; i < str.length(); ++i)
-            //     std::cout <<"[" << i << "]: " << str[i]  << std::endl;
             int comma_index = str.find_first_of(",]", k);
 
             if (comma_index != std::string::npos) {
-                std::string tmp = parse(str, k, comma_index);
-                if (!calculate(tmp)) {
-                    // std::cout << "*****************************************" << std::endl;
-                    // std::cout << calculate(tmp) << std::endl;
-                    // std::cout << "*****************************************" << std::endl;
+                std::string tmp = transformToPolishNotation(str, k, comma_index);
+                if (!calculate(tmp))
                     break;
-                }
                 str.replace(k, comma_index - k, "I");
-                // std::cout << "*****************************************" << std::endl;
-                // std::cout <<  str << std::endl;
-                // std::cout << "*****************************************" << std::endl;
             }
 
         }
@@ -157,7 +125,7 @@ void lexicalAnalysis(std::string &str) {
             space = true;
         }
       
-        if (!(letter || literal || service || space)) {
+        if (letter && literal && service && space) {
             std::cout << "Wrong symbol: " << str[i + 1] << "\n";
             return;
         }
@@ -167,22 +135,20 @@ void lexicalAnalysis(std::string &str) {
         service = false;
         space = false;
     }
-    result += ";";
     std::cout << "result: " << result << std::endl;
-    SyntacticAnalysis(result);
-    // std::string tmp = parse(result);
-    // std::cout << calculate(tmp) << std::endl;
+    result += ";";
+    syntacticAnalysis(result);
     return;
 }
 
 int main() {
-    string input_string, end = "end";
-    std::cout << "Input string or end: " ;
+    std::string input_string, end = "end";
+    std::cout << "Input string or end: ";
     std::getline(std::cin, input_string);
-    while(input_string.compare(end)) {
+    while (input_string.compare(end)) {
         lexicalAnalysis(input_string);
         std::cout << "Input string or end:";
         std::getline(std::cin, input_string);  
-  }
-  return 0;
+    }
+    return 0;
 }
