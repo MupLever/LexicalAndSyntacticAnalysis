@@ -34,7 +34,7 @@ void printError(const int arr[7][6], const int state, const char ch) {
 }
 
 void syntacticAnalysis(std::string &str) {
-    int automat[7][6] = {
+    const int automat[7][6] = {
         {1, 0, 0, 0, 0, 0},
         {0, 0, 2, 0, 0, 7},
         {3, 4, 0, 0, 0, 0},
@@ -44,41 +44,38 @@ void syntacticAnalysis(std::string &str) {
         {0, 0, 0, 0, 0, 7}
     };
 
-    int state = 0, signal = -1, k = 0;
-    while(k < str.length()){
-        if (k + 1 < str.length()) {
-            if (str[k] == 'N' && str[k + 1] =='I') {
-              std::cout << "Invalid identify name\n";
-              break;
-            }
+    int state = 0, signal = -1, cur_token = 0;
+    while (cur_token < str.length()) {
+        if (cur_token + 1 < str.length() && str[cur_token] == 'N' && str[cur_token + 1] =='I') {
+            std::cout << "Invalid identify name\n";
+            break;
         }
 
-        if ((signal = numberOfSignal(str[k])) != -1)
-            ++k;
+        if ((signal = numberOfSignal(str[cur_token])) != -1)
+            ++cur_token;
         else
             break;
 
-        if (automat[state][signal] != 0)
+        if (automat[state][signal] != 0) {
             state = automat[state][signal];
-        else {
-            printError(automat, state, str[k - 1]);
+        } else {
+            printError(automat, state, str[cur_token - 1]);
             break;
         }
 
         if (state == 2 || state == 5) {
-            int comma_index = str.find_first_of(",]", k);
+            int comma_index = str.find_first_of(",]", cur_token);
 
             if (comma_index != std::string::npos) {
-                std::string tmp = transformToPolishNotation(str, k, comma_index);
+                std::string tmp = transformToPolishNotation(str, cur_token, comma_index);
                 if (!calculate(tmp))
                     break;
-                str.replace(k, comma_index - k, "I");
+                str.replace(cur_token, comma_index - cur_token, "I");
             }
-
         }
     }
     
-    if (k == str.length() && state == 7)
+    if (cur_token == str.length() && state == 7)
         std::cout << "Successfully!\n";
     else 
         std::cout << "Unsuccessfully!\n";
@@ -88,52 +85,30 @@ void lexicalAnalysis(std::string &str) {
     std::string result, buf;
     trim(str);
     std::cout << str << std::endl;
-    bool service = false;
-    bool literal = false;
-    bool letter = false;
-    bool space = false;
-
     for (int i = 0; i < str.length();) {
         if (isNumber(str[i])) {
-            std::cout << "Literal: ";
+            buf = "";
             while (isNumber(str[i]))
-                std::cout << str[i++];
-  
+                buf.push_back(str[i++]);
+
             result.push_back('N');
-            literal = true;
-            std::cout << "\n";
-        }
-
-        if (isOperation(str[i]) || isSeparator(str[i])) {
+            std::cout << "Literal: " << buf << std::endl;
+        } else if (isOperation(str[i]) || isSeparator(str[i])) {
             std::cout << "Service symbol: " << str[i] << "\n";
-            service = true;
             result.push_back(str[i++]);
-        }
-
-        if (isLetter(str[i])) {
+        } else if (isLetter(str[i])) {
             buf = "";
             while (isLetter(str[i]) || isNumber(str[i]))
                 buf.push_back(str[i++]);
-            letter = true;
 
             result.push_back('I');
-            std::cout << buf << std::endl;
-        }
-    
-        if (str[i] == ' ') {
+            std::cout << "Identify: " << buf << std::endl;
+        } else if (str[i] == ' ') {
             ++i;
-            space = true;
-        }
-      
-        if (letter && literal && service && space) {
-            std::cout << "Wrong symbol: " << str[i + 1] << "\n";
+        } else {
+            std::cout << "Wrong symbol: " << str[i] << "\n";
             return;
         }
-
-        letter = false;
-        literal = false;
-        service = false;
-        space = false;
     }
     std::cout << "result: " << result << std::endl;
     result += ";";
